@@ -149,7 +149,8 @@ def parse_due_date(date_str):
     if date_str == "N/A" or pd.isna(date_str) or date_str == "":
         return None
     try:
-        date_str = re.sub(r"(st|nd|rd|th)", "", date_str, flags=re.IGNORECASE)
+        date_str = re.sub(r"(?<=\d)(st|nd|rd|th)\b", "", date_str, flags=re.IGNORECASE)
+        date_str = re.sub(r"^[a-zA-Z]+,\s*", "", date_str)  # strip "Thursday, " prefix
         return parser.parse(date_str, dayfirst=True)
     except Exception as e:
         logger.warning(f"Failed to parse due date '{date_str}': {e}")
