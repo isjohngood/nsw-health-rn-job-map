@@ -79,4 +79,4 @@ failed_due_date_pages/
 failed_pages/
 .venv-linux/
 
-job_map.html
+/job_map.html
