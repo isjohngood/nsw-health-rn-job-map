@@ -20,11 +20,6 @@ jobs:
         with:
           fetch-depth: 0   # full history so git push works
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
-
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
