@@ -271,48 +271,6 @@ def create_job_map(df, geo_cache, previous_urls):
     logger.info(f"Alerts: {alert_count} (New: {new_count}, Incentives: {incentives_count}), Expired: {expired_count}")
     logger.info(f"Total markers: {total_markers}, Incentives markers: {incentives_markers}")
     
-    # Add summary
-    # Create table for jobs with missing locations
-    logger.debug("Adding missing locations table")
-    if missing_location_rows:
-        table_html = """
-        <h3>Jobs with Missing or Invalid Locations</h3>
-        <div style="max-height: 300px; overflow-y: auto;">
-        <table border="1" style="width: 100%; border-collapse: collapse; font-size: 12pt;">
-            <tr>
-                <th>Job Title</th>
-                <th>Location</th>
-                <th>Incentives</th>
-                <th>Due Date</th>
-                <th>URL</th>
-                <th>Scraped Date</th>
-                <th>Last Seen</th>
-            </tr>
-        """
-        for row in missing_location_rows:
-            def safe_str(value):
-                return escape(str(value)) if pd.notna(value) and value is not None else "Unknown"
-            table_html += f"""
-            <tr>
-                <td>{safe_str(row['Job Title'])}</td>
-                <td>{safe_str(row['Location'])}</td>
-                <td>{"Yes" if (isinstance(row['Incentives'], str) and "incentive" in row['Incentives'].lower()) or \
-                           (isinstance(row['Job Title'], str) and "incentive" in row['Job Title'].lower()) else "No"}</td>
-                <td>{safe_str(row['Due Date'])}</td>
-                <td><a href="{safe_str(row['URL'])}" target="_blank">{safe_str(row['URL'])}</a></td>
-                <td>{safe_str(row['Scraped Date'])}</td>
-                <td>{safe_str(row['Last Seen'])}</td>
-            </tr>
-            """
-        table_html += "</table></div>"
-    else:
-        table_html = "<h3>Jobs with Missing or Invalid Locations</h3><p>No jobs with missing or invalid locations found.</p>"
-    
-    folium.map.Marker(
-        [-33.8688, 151.2093 - 0.05],
-        icon=folium.DivIcon(html=table_html)
-    ).add_to(m)
-    
     return m
 
 def main():
