@@ -1,7 +1,6 @@
 import pandas as pd
 import folium
 from folium.plugins import MarkerCluster
-from folium import LayerControl
 from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
 from dateutil import parser
@@ -166,11 +165,12 @@ def is_expired(due_date):
 def create_job_map(df, geo_cache, previous_urls):
     """Create an interactive map with clustered job locations, an Incentives filter, and a table for jobs with no location."""
     logger.debug("Creating Folium map")
-    m = folium.Map(location=[-33.8688, 151.2093], zoom_start=7)
-    
-    # Initialize marker cluster
+    m = folium.Map(location=[-33.8688, 151.2093], zoom_start=7,
+                   tiles="OpenStreetMap")
+
+    # Initialize marker cluster (control=False hides it from the legend)
     logger.debug("Adding marker cluster")
-    marker_cluster = MarkerCluster(name="All Jobs").add_to(m)
+    marker_cluster = MarkerCluster(name="All Jobs", control=False).add_to(m)
     
     total_rows = len(df)
     location_jobs = {}
@@ -209,7 +209,8 @@ def create_job_map(df, geo_cache, previous_urls):
                 incentives_count += 1
         if is_expired_job:
             expired_count += 1
-        
+            continue  # skip expired jobs from the map
+
         coords_key = (coords[0], coords[1])
         if coords_key not in location_jobs:
             location_jobs[coords_key] = []
@@ -269,10 +270,6 @@ def create_job_map(df, geo_cache, previous_urls):
     logger.info(f"Processed {len(df)} jobs, {len(location_jobs)} unique coordinate sets, {len(missing_location_rows)} missing/invalid locations")
     logger.info(f"Alerts: {alert_count} (New: {new_count}, Incentives: {incentives_count}), Expired: {expired_count}")
     logger.info(f"Total markers: {total_markers}, Incentives markers: {incentives_markers}")
-    
-    # Add LayerControl
-    logger.debug("Adding LayerControl")
-    LayerControl(position='topright', collapsed=False, autoZIndex=True).add_to(m)
     
     # Add summary
     logger.debug("Adding summary marker")
