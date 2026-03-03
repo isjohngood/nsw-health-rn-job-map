@@ -216,7 +216,16 @@ def create_job_map(df, geo_cache, previous_urls):
         is_alert, is_new, has_incentives = is_alert_job(row, previous_urls)
         due_date = parse_due_date(row['Due Date'])
         is_expired_job = is_expired(due_date)
-        
+
+        # Skip jobs not seen in the last 60 days (stale, likely removed from site)
+        try:
+            last_seen = date.fromisoformat(str(row['Last Seen']).strip())
+            if (date.today() - last_seen).days > 60:
+                expired_count += 1
+                continue
+        except (ValueError, TypeError):
+            pass
+
         if is_alert:
             alert_count += 1
             if is_new:
@@ -268,13 +277,14 @@ def create_job_map(df, geo_cache, previous_urls):
             """
         
         color = "red" if any_alert else "blue" if any(job[3] for job in jobs) else "green"
-        
+        scrollable_popup = f'<div style="max-height:300px;overflow-y:auto;width:380px">{popup_content}</div>'
+
         for job in jobs:
             row, is_alert, is_new, has_incentives, is_expired_job, location = job
             tooltip_text = f"{clean_location(row['Location'], 0, row)} ({len(jobs)} jobs)"
             marker_cluster.add_child(folium.Marker(
                 location=list(coords),
-                popup=folium.Popup(popup_content, max_width=400),
+                popup=folium.Popup(scrollable_popup, max_width=400),
                 tooltip=tooltip_text,
                 icon=folium.Icon(color=color)
             ))
@@ -283,7 +293,7 @@ def create_job_map(df, geo_cache, previous_urls):
                 # Separate marker object to avoid Folium JS ordering bug
                 incentive_cluster.add_child(folium.Marker(
                     location=list(coords),
-                    popup=folium.Popup(popup_content, max_width=400),
+                    popup=folium.Popup(scrollable_popup, max_width=400),
                     tooltip=tooltip_text,
                     icon=folium.Icon(color="orange")
                 ))
