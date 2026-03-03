@@ -1,6 +1,7 @@
 import pandas as pd
 import folium
 from folium.plugins import MarkerCluster
+from folium import LayerControl
 from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
 from dateutil import parser
@@ -168,9 +169,25 @@ def create_job_map(df, geo_cache, previous_urls):
     m = folium.Map(location=[-33.8688, 151.2093], zoom_start=7,
                    tiles="OpenStreetMap")
 
-    # Initialize marker cluster (control=False hides it from the legend)
-    logger.debug("Adding marker cluster")
+    # All active jobs cluster (always visible, not in legend)
+    logger.debug("Adding marker clusters")
     marker_cluster = MarkerCluster(name="All Jobs", control=False).add_to(m)
+
+    # Incentives-only cluster with orange icons
+    incentive_cluster = MarkerCluster(
+        name="Incentives Only",
+        control=True,
+        show=True,
+        icon_create_function="""function(cluster) {
+            var count = cluster.getChildCount();
+            var c = count < 10 ? 'small' : count < 100 ? 'medium' : 'large';
+            return L.divIcon({
+                html: '<div style="background-color:rgba(241,128,23,0.6);"><span>' + count + '</span></div>',
+                className: 'marker-cluster marker-cluster-' + c,
+                iconSize: L.point(40, 40)
+            });
+        }"""
+    ).add_to(m)
     
     total_rows = len(df)
     location_jobs = {}
@@ -255,22 +272,31 @@ def create_job_map(df, geo_cache, previous_urls):
         
         for job in jobs:
             row, is_alert, is_new, has_incentives, is_expired_job, location = job
-            marker = folium.Marker(
-                location=coords,
+            tooltip_text = f"{clean_location(row['Location'], 0, row)} ({len(jobs)} jobs)"
+            marker_cluster.add_child(folium.Marker(
+                location=list(coords),
                 popup=folium.Popup(popup_content, max_width=400),
-                tooltip=f"{clean_location(row['Location'], 0, row)} ({len(jobs)} jobs)",
+                tooltip=tooltip_text,
                 icon=folium.Icon(color=color)
-            )
-            marker_cluster.add_child(marker)
+            ))
             total_markers += 1
             if has_incentives:
+                # Separate marker object to avoid Folium JS ordering bug
+                incentive_cluster.add_child(folium.Marker(
+                    location=list(coords),
+                    popup=folium.Popup(popup_content, max_width=400),
+                    tooltip=tooltip_text,
+                    icon=folium.Icon(color="orange")
+                ))
                 incentives_markers += 1
     
     # Log marker counts
     logger.info(f"Processed {len(df)} jobs, {len(location_jobs)} unique coordinate sets, {len(missing_location_rows)} missing/invalid locations")
     logger.info(f"Alerts: {alert_count} (New: {new_count}, Incentives: {incentives_count}), Expired: {expired_count}")
     logger.info(f"Total markers: {total_markers}, Incentives markers: {incentives_markers}")
-    
+
+    LayerControl(collapsed=False).add_to(m)
+
     return m
 
 def main():
