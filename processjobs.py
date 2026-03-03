@@ -272,13 +272,6 @@ def create_job_map(df, geo_cache, previous_urls):
     logger.info(f"Total markers: {total_markers}, Incentives markers: {incentives_markers}")
     
     # Add summary
-    logger.debug("Adding summary marker")
-    summary = f"Alerts: {alert_count} jobs ({new_count} new, {incentives_count} with incentives), Expired: {expired_count}"
-    folium.map.Marker(
-        [-33.8688, 151.2093],
-        icon=folium.DivIcon(html=f'<div style="font-size: 12pt">{summary}</div>')
-    ).add_to(m)
-    
     # Create table for jobs with missing locations
     logger.debug("Adding missing locations table")
     if missing_location_rows:
