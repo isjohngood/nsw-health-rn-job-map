@@ -61,6 +61,7 @@ rn_jobs_with_incentiveols.csv
 due_date_formats*.txt
 tailwind.config.js
 *.txt
+!requirements.txt
 
 # Python helper scripts not part of the main workflow
 app.py
