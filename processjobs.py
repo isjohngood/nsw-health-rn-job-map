@@ -1,7 +1,7 @@
 import pandas as pd
 import folium
 from folium.plugins import MarkerCluster
-from folium import FeatureGroup, LayerControl, TileLayer
+from folium import LayerControl
 from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
 from dateutil import parser
@@ -168,32 +168,9 @@ def create_job_map(df, geo_cache, previous_urls):
     logger.debug("Creating Folium map")
     m = folium.Map(location=[-33.8688, 151.2093], zoom_start=7)
     
-    # Add single base tile layer (OpenStreetMap)
-    logger.debug("Adding base tile layer")
-    TileLayer("openstreetmap", name="OpenStreetMap", overlay=False, control=False, show=True).add_to(m)
-    
-    # Initialize marker cluster (not in LayerControl)
+    # Initialize marker cluster
     logger.debug("Adding marker cluster")
-    marker_cluster = MarkerCluster(name="All Jobs", overlay=True, control=False, show=True)
-    m.add_child(marker_cluster)
-    
-    # Initialize feature group for incentives
-    logger.debug("Adding incentives feature group")
-    incentives_layer = FeatureGroup(name="Incentives", overlay=True, control=True, show=False)
-    m.add_child(incentives_layer)
-    
-    # Add test markers
-    logger.debug("Adding test markers")
-    marker_cluster.add_child(folium.Marker(
-        location=[-33.8688, 151.2093],
-        popup="Test: All Jobs",
-        icon=folium.Icon(color="purple")
-    ))
-    incentives_layer.add_child(folium.Marker(
-        location=[-33.8688, 151.2093],
-        popup="Test: Incentives Job",
-        icon=folium.Icon(color="blue")
-    ))
+    marker_cluster = MarkerCluster(name="All Jobs").add_to(m)
     
     total_rows = len(df)
     location_jobs = {}
@@ -202,8 +179,8 @@ def create_job_map(df, geo_cache, previous_urls):
     incentives_count = 0
     expired_count = 0
     missing_location_rows = []
-    total_markers = 1  # Start with test marker
-    incentives_markers = 1  # Start with test marker
+    total_markers = 0
+    incentives_markers = 0
     
     # Group jobs by coordinates
     for idx, row in tqdm(df.iterrows(), total=total_rows, desc="Processing jobs"):
@@ -286,7 +263,6 @@ def create_job_map(df, geo_cache, previous_urls):
             marker_cluster.add_child(marker)
             total_markers += 1
             if has_incentives:
-                incentives_layer.add_child(marker)
                 incentives_markers += 1
     
     # Log marker counts
