@@ -1,7 +1,6 @@
 import pandas as pd
 import folium
 from folium.plugins import MarkerCluster
-from folium import LayerControl
 from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
 from dateutil import parser
@@ -169,15 +168,15 @@ def create_job_map(df, geo_cache, previous_urls):
     m = folium.Map(location=[-33.8688, 151.2093], zoom_start=7,
                    tiles="OpenStreetMap")
 
-    # All active jobs cluster (always visible, not in legend)
     logger.debug("Adding marker clusters")
-    marker_cluster = MarkerCluster(name="All Jobs", control=False).add_to(m)
+    # All active jobs (shown by default)
+    marker_cluster = MarkerCluster(name="All Jobs", control=False, show=True).add_to(m)
 
-    # Incentives-only cluster with orange icons
+    # Incentives-only cluster with orange icons (hidden by default)
     incentive_cluster = MarkerCluster(
         name="Incentives Only",
-        control=True,
-        show=True,
+        control=False,
+        show=False,
         icon_create_function="""function(cluster) {
             var count = cluster.getChildCount();
             var c = count < 10 ? 'small' : count < 100 ? 'medium' : 'large';
@@ -295,7 +294,44 @@ def create_job_map(df, geo_cache, previous_urls):
     logger.info(f"Alerts: {alert_count} (New: {new_count}, Incentives: {incentives_count}), Expired: {expired_count}")
     logger.info(f"Total markers: {total_markers}, Incentives markers: {incentives_markers}")
 
-    LayerControl(collapsed=False).add_to(m)
+    # Custom toggle button — swaps between all-jobs and incentives-only clusters
+    map_name = m.get_name()
+    all_name = marker_cluster.get_name()
+    inc_name = incentive_cluster.get_name()
+    toggle_html = f"""
+    <div id="incentive-btn"
+         style="position:fixed;top:80px;right:10px;z-index:1000;
+                background:white;padding:8px 14px;
+                border:2px solid rgba(0,0,0,0.3);border-radius:4px;
+                cursor:pointer;font-weight:bold;font-size:13px;
+                box-shadow:0 1px 4px rgba(0,0,0,0.3);"
+         onclick="toggleIncentives(this)">
+        Show Incentives Only
+    </div>
+    <script>
+    function toggleIncentives(btn) {{
+        var map = {map_name};
+        var allCluster = {all_name};
+        var incCluster = {inc_name};
+        if (btn.dataset.active === 'true') {{
+            map.addLayer(allCluster);
+            map.removeLayer(incCluster);
+            btn.dataset.active = 'false';
+            btn.style.background = 'white';
+            btn.style.color = 'black';
+            btn.textContent = 'Show Incentives Only';
+        }} else {{
+            map.removeLayer(allCluster);
+            map.addLayer(incCluster);
+            btn.dataset.active = 'true';
+            btn.style.background = '#ff9800';
+            btn.style.color = 'white';
+            btn.textContent = 'Show All Jobs';
+        }}
+    }}
+    </script>
+    """
+    m.get_root().html.add_child(folium.Element(toggle_html))
 
     return m
 
