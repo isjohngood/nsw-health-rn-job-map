@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSW Health RN Job Map - All Locations</title>
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chart-container { max-width: 1200px; margin: 0 auto; overflow-x: auto; }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Header -->
+    <header class="bg-primary text-white py-4">
+        <div class="container text-center">
+            <h1 class="h3 fw-bold mb-2">NSW Health Registered Nurse Job Map</h1>
+            <p class="mb-0">All Active Locations Chart</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <section class="container py-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="card-title h5 fw-semibold mb-3 text-center">Active Jobs by Location (All)</h2>
+                <div class="chart-container">
+                    <canvas id="allLocationChart"></canvas>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="index.html" class="btn btn-outline-primary">Back to Main Page</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-2">Built for NSW Health RN Job Seekers | Data as of June 15, 2025</p>
+            <a href="https://jobs.health.nsw.gov.au/" class="text-primary text-decoration-underline" target="_blank">Visit NSW Health Jobs</a>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const currentDate = new Date('2025-06-15T19:35:00+10:00'); // June 15, 2025, 07:35 PM AEST
+
+        function cleanLocation(location) {
+            try {
+                console.log(`cleanLocation input: ${location}`);
+                if (!location || typeof location !== 'string' || location.trim() === '' || location.toLowerCase() === 'n/a' ||
+                    location.toLowerCase() === 'statewide' || location.toLowerCase() === 'location negotiable' ||
+                    location.toLowerCase().includes('multiple locations')) {
+                    console.log(`cleanLocation output: Sydney (special case)`);
+                    return 'Sydney';
+                }
+                let cleaned = location.trim();
+                let primary = cleaned.split('|')[0].trim();
+                let city = primary.split(',')[0].trim();
+                let finalCity = city.charAt(0).toUpperCase() + city.slice(1);
+                console.log(`cleanLocation output: ${finalCity || 'Sydney'}`);
+                return finalCity || 'Sydney';
+            } catch (e) {
+                console.error(`cleanLocation error: ${e}, input: ${location}`);
+                return 'Sydney';
+            }
+        }
+
+        function getDueDateStatus(dueDate) {
+            try {
+                console.log(`getDueDateStatus input: ${dueDate}`);
+                if (!dueDate || dueDate.trim() === '' || dueDate.toLowerCase() === 'n/a') {
+                    console.log(`getDueDateStatus output: Open Until Filled`);
+                    return 'Open Until Filled';
+                }
+
+                // Normalize date string
+                let cleanedDate = dueDate.trim().toLowerCase();
+                cleanedDate = cleanedDate.replace(/^is\s+/i, '');
+                cleanedDate = cleanedDate.replace(/(\d+)(st|nd|rd|th)\b/gi, '$1');
+                cleanedDate = cleanedDate.replace(/\\/g, '/');
+
+                console.log(`getDueDateStatus cleaned: ${cleanedDate}`);
+
+                if (!/\d{4}/.test(cleanedDate)) {
+                    console.log(`getDueDateStatus output: Invalid (no year)`);
+                    return 'Invalid';
+                }
+
+                // Custom parser for DD/MM/YYYY
+                const dateMatch = cleanedDate.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+                let parsedDate;
+                if (dateMatch) {
+                    const day = parseInt(dateMatch[1], 10);
+                    const month = parseInt(dateMatch[2], 10) - 1;
+                    const year = parseInt(dateMatch[3], 10);
+                    parsedDate = new Date(year, month, day);
+                    console.log(`getDueDateStatus parsed (custom): ${parsedDate}`);
+                } else {
+                    parsedDate = new Date(cleanedDate);
+                    console.log(`getDueDateStatus parsed (fallback): ${parsedDate}`);
+                }
+
+                if (isNaN(parsedDate) || parsedDate.getFullYear() < 2025 || parsedDate.getFullYear() > 2030) {
+                    let normalized = cleanedDate.replace(/(\d+)([a-zA-Z]+)/g, '$1 $2');
+                    console.log(`getDueDateStatus normalized: ${normalized}`);
+                    if (normalized !== cleanedDate) {
+                        parsedDate = new Date(normalized);
+                        console.log(`getDueDateStatus parsed (normalized): ${parsedDate}`);
+                    }
+                    if (isNaN(parsedDate) || parsedDate.getFullYear() < 2025 || parsedDate.getFullYear() > 2030) {
+                        console.log(`getDueDateStatus output: Invalid`);
+                        return 'Invalid';
+                    }
+                }
+
+                if (parsedDate < currentDate) {
+                    console.log(`getDueDateStatus output: Expired`);
+                    return 'Expired';
+                }
+
+                console.log(`getDueDateStatus output: Active`);
+                return 'Active';
+            } catch (e) {
+                console.error(`getDueDateStatus error: ${e}, input: ${dueDate}`);
+                return 'Invalid';
+            }
+        }
+
+        // Load jobs.json
+        fetch('jobs.json')
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to load jobs.json');
+                return response.json();
+            })
+            .then(data => {
+                console.log('Loaded jobs.json:', data);
+                // Filter active jobs
+                const activeJobs = data.filter(row => {
+                    const status = getDueDateStatus(row['Due Date']);
+                    console.log(`Job: ${row['Job Title']}, Location: ${row.Location}, Due Date: ${row['Due Date']}, Status: ${status}`);
+                    return status !== 'Expired' && status !== 'Invalid';
+                });
+
+                console.log(`Active jobs after filtering: ${activeJobs.length}`);
+
+                // Process locations
+                const locations = {};
+                activeJobs.forEach(row => {
+                    try {
+                        const location = cleanLocation(row.Location);
+                        console.log(`Aggregating: Location=${row.Location}, Parsed=${location}`);
+                        locations[location] = (locations[location] || 0) + 1;
+                    } catch (e) {
+                        console.error(`Error aggregating job: ${JSON.stringify(row)}, error: ${e}`);
+                    }
+                });
+
+                console.log('Final locations:', locations);
+
+                // Render chart
+                new Chart(document.getElementById('allLocationChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(locations),
+                        datasets: [{
+                            label: 'Active Jobs by Location (All)',
+                            data: Object.values(locations),
+                            backgroundColor: 'rgba(13, 110, 253, 0.6)',
+                            borderColor: 'rgba(13, 110, 253, 1)',
+                            borderWidth: 1,
+                            maxBarThickness: 25
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: { 
+                                beginAtZero: true, 
+                                title: { display: true, text: 'Job Count', font: { size: 16 } },
+                                ticks: { font: { size: 14 } }
+                            },
+                            x: { 
+                                ticks: { 
+                                    autoSkip: false, 
+                                    maxRotation: 45, 
+                                    minRotation: 45, 
+                                    font: { size: 12 } }
+                        }
+                        },
+                        plugins: { 
+                            legend: { display: false },
+                            tooltip: { titleFont: { size: 16 }, bodyFont: { size: 14 } }
+                        },
+                        barPercentage: 0.8,
+                        categoryPercentage: 0.9
+                    }
+                });
+            })
+            .catch(err => {
+                const container = document.querySelector('.card-body');
+                container.innerHTML = '<div class="alert alert-danger text-center">Error loading job data. Please ensure jobs.json is in the main folder.</div>';
+                console.error('Data fetch error:', err);
+            });
+    </script>
+</body>
+</html>

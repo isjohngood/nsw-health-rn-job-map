@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSW Health RN Job Map</title>
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hero { background: linear-gradient(90deg, #1d4ed8, #1e40af); }
+        .table th.sort-btn { cursor: pointer; }
+        .table th.sort-btn.active::after { content: ' ↓'; }
+        .table th.sort-btn.asc::after { content: ' ↑'; }
+        .chart-container { max-width: 800px; margin: 0 auto; }
+        .clickable-row { cursor: pointer; }
+        .clickable-row:hover { background-color: #f1f3f5; }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Hero Section -->
+    <header class="hero text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold mb-3">NSW Health Registered Nurse Job Map</h1>
+            <p class="lead mb-4">Explore active nursing opportunities across New South Wales with our interactive map and job statistics.</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a id="loadMapBtn" href="output/job_map.html" target="_blank" class="btn btn-warning btn-lg fw-semibold">View Job Map</a>
+                <button data-bs-toggle="modal" data-bs-target="#dataModal" class="btn btn-outline-light btn-lg fw-semibold">About the Data</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Data Modal -->
+    <div class="modal fade" id="dataModal" tabindex="-1" aria-labelledby="dataModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dataModalLabel">About the Job Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Sourced from <a href="https://jobs.health.nsw.gov.au/" class="text-primary" target="_blank">NSW Health Jobs</a>, this dataset includes active registered nurse positions with details on locations, incentives, and deadlines.</p>
+                    <p id="lastUpdated"><strong>Last updated:</strong> Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Listings Modal -->
+    <div class="modal fade" id="jobListingsModal" tabindex="-1" aria-labelledby="jobListingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="jobListingsModalLabel">Job Listings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-hover">
+                        <thead class="table-primary">
+                            <tr>
+                                <th class="p-3">Job Title</th>
+                                <th class="p-3">Location</th>
+                                <th class="p-3">Due Date</th>
+                                <th class="p-3">Link</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jobListingsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Section -->
+    <section class="container py-5">
+        <h2 class="display-6 fw-bold text-center mb-5">Active Job Statistics</h2>
+        <div id="errorMessage" class="alert alert-danger d-none text-center mb-4"></div>
+        <div class="row g-4">
+            <!-- Summary Table -->
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="card-title h5 fw-semibold mb-3">Summary</h3>
+                        <table class="table table-hover">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th class="p-3">Metric</th>
+                                    <th class="p-3">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="summaryTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location Table (Collapsed) -->
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="card-title h5 fw-semibold mb-3">Jobs by Location</h3>
+                        <button class="btn btn-outline-primary mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#locationTableCollapse" aria-expanded="false" aria-controls="locationTableCollapse">
+                            Toggle Table
+                        </button>
+                        <input type="text" id="locationSearch" class="form-control mb-3" placeholder="Search locations...">
+                        <div class="collapse" id="locationTableCollapse">
+                            <table class="table table-hover">
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th class="p-3 sort-btn" data-sort="location">Location</th>
+                                        <th class="p-3 sort-btn" data-sort="count">Job Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="locationTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Position Table (Collapsed) -->
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="card-title h5 fw-semibold mb-3">Jobs by Position</h3>
+                        <button class="btn btn-outline-primary mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#positionTableCollapse" aria-expanded="false" aria-controls="positionTableCollapse">
+                            Toggle Table
+                        </button>
+                        <input type="text" id="positionSearch" class="form-control mb-3" placeholder="Search positions...">
+                        <div class="collapse" id="positionTableCollapse">
+                            <table class="table table-hover">
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th class="p-3 sort-btn" data-sort="position">Position Category</th>
+                                        <th class="p-3 sort-btn" data-sort="count">Job Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="positionTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Incentive Breakdown -->
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="card-title h5 fw-semibold mb-3">Incentive Breakdown</h3>
+                        <table class="table table-hover">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3">Job Count</th>
+                                </tr>
+                            </thead>
+                            <tbody id="incentiveTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Region Breakdown (Collapsed) -->
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="card-title h5 fw-semibold mb-3">Incentives by Region</h3>
+                        <button class="btn btn-outline-primary mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#regionTableCollapse" aria-expanded="false" aria-controls="regionTableCollapse">
+                            Toggle Table
+                        </button>
+                        <input type="text" id="regionSearch" class="form-control mb-3" placeholder="Search regions...">
+                        <div class="collapse" id="regionTableCollapse">
+                            <table class="table table-hover">
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th class="p-3 sort-btn" data-sort="region">Region</th>
+                                        <th class="p-3">Incentivized Jobs</th>
+                                        <th class="p-3">Non-Incentivized Jobs</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="regionTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Due Date Status -->
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="card-title h5 fw-semibold mb-3">Due Date Status</h3>
+                        <table class="table table-hover">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3">Count</th>
+                                    <th class="p-3">Description</th>
+                                    <th class="p-3">Date Range</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dueDateTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="mt-5">
+            <h3 class="display-6 fw-bold text-center mb-5">Visual Insights</h3>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h4 class="card-title h6 fw-semibold mb-3 text-center">Jobs by Location (Top 10)</h4>
+                            <a href="all_locations.html" class="btn btn-outline-primary mb-3">View All Locations</a>
+                            <div class="chart-container">
+                                <canvas id="locationChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h4 class="card-title h6 fw-semibold mb-3 text-center">Jobs by Position (Top 10)</h4>
+                            <div class="chart-container">
+                                <canvas id="positionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h4 class="card-title h6 fw-semibold mb-3 text-center">Incentive Status</h4>
+                            <div class="chart-container">
+                                <canvas id="incentiveChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-2" id="footerDate">Built for NSW Health RN Job Seekers</p>
+            <a href="https://jobs.health.nsw.gov.au/" class="text-primary text-decoration-underline" target="_blank">Visit NSW Health Jobs</a>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const currentDate = new Date();
+        currentDate.setHours(0, 0, 0, 0);
+        const oneMonthFromNow = new Date(currentDate);
+        oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+        const threeMonthsFromNow = new Date(currentDate);
+        threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
+        let jobData = [];
+
+        function cleanLocation(location) {
+            try {
+                console.log(`cleanLocation input: ${location}`);
+                if (!location || typeof location !== 'string' || location.trim() === '' || location.toLowerCase() === 'n/a' ||
+                    location.toLowerCase() === 'statewide' || location.toLowerCase() === 'location negotiable' ||
+                    location.toLowerCase().includes('multiple locations')) {
+                    console.log(`cleanLocation output: Sydney (special case)`);
+                    return 'Sydney';
+                }
+                let cleaned = location.trim();
+                let primary = cleaned.split('|')[0].trim();
+                let city = primary.split(',')[0].trim();
+                let finalCity = city.charAt(0).toUpperCase() + city.slice(1);
+                console.log(`cleanLocation output: ${finalCity || 'Sydney'}`);
+                return finalCity || 'Sydney';
+            } catch (e) {
+                console.error(`cleanLocation error: ${e}, input: ${location}`);
+                return 'Sydney';
+            }
+        }
+
+        function getRegion(location) {
+            try {
+                if (!location || location.toLowerCase() === 'statewide') return 'Sydney';
+                const parts = location.split('|').map(part => part.trim());
+                return parts.length > 1 ? parts[1] : cleanLocation(location);
+            } catch (e) {
+                console.error(`getRegion error: ${e}, input: ${location}`);
+                return 'Sydney';
+            }
+        }
+
+        function hasIncentives(incentives) {
+            if (!incentives) return false;
+            const keywords = ['incentive', 'salary packaging', 'annual leave'];
+            return keywords.some(keyword => incentives.toLowerCase().includes(keyword));
+        }
+
+        function getDueDateStatus(dueDate) {
+            try {
+                console.log(`getDueDateStatus input: ${dueDate}`);
+                if (!dueDate || dueDate.trim() === '' || dueDate.toLowerCase() === 'n/a') {
+                    console.log(`getDueDateStatus output: Open Until Filled`);
+                    return 'Open Until Filled';
+                }
+
+                // Normalize date string
+                let cleanedDate = dueDate.trim().toLowerCase();
+                cleanedDate = cleanedDate.replace(/^is\s+/i, '');
+                cleanedDate = cleanedDate.replace(/(\d+)(st|nd|rd|th)\b/gi, '$1');
+                cleanedDate = cleanedDate.replace(/\\/g, '/');
+
+                console.log(`getDueDateStatus cleaned: ${cleanedDate}`);
+
+                if (!/\d{4}/.test(cleanedDate)) {
+                    console.log(`getDueDateStatus output: Invalid (no year)`);
+                    return 'Invalid';
+                }
+
+                // Custom parser for DD/MM/YYYY
+                const dateMatch = cleanedDate.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+                let parsedDate;
+                if (dateMatch) {
+                    const day = parseInt(dateMatch[1], 10);
+                    const month = parseInt(dateMatch[2], 10) - 1;
+                    const year = parseInt(dateMatch[3], 10);
+                    parsedDate = new Date(year, month, day);
+                    console.log(`getDueDateStatus parsed (custom): ${parsedDate}`);
+                } else {
+                    parsedDate = new Date(cleanedDate);
+                    console.log(`getDueDateStatus parsed (fallback): ${parsedDate}`);
+                }
+
+                if (isNaN(parsedDate) || parsedDate.getFullYear() < 2025 || parsedDate.getFullYear() > 2030) {
+                    let normalized = cleanedDate.replace(/(\d+)([a-zA-Z]+)/g, '$1 $2');
+                    console.log(`getDueDateStatus normalized: ${normalized}`);
+                    if (normalized !== cleanedDate) {
+                        parsedDate = new Date(normalized);
+                        console.log(`getDueDateStatus parsed (normalized): ${parsedDate}`);
+                    }
+                    if (isNaN(parsedDate) || parsedDate.getFullYear() < 2025 || parsedDate.getFullYear() > 2030) {
+                        console.log(`getDueDateStatus output: Invalid`);
+                        return 'Invalid';
+                    }
+                }
+
+                if (parsedDate < currentDate) {
+                    console.log(`getDueDateStatus output: Expired`);
+                    return 'Expired';
+                }
+
+                if (parsedDate <= oneMonthFromNow) {
+                    console.log(`getDueDateStatus output: Upcoming (Within 1 Month)`);
+                    return 'Upcoming (Within 1 Month)';
+                }
+                if (parsedDate <= threeMonthsFromNow) {
+                    console.log(`getDueDateStatus output: Upcoming (1-3 Months)`);
+                    return 'Upcoming (1-3 Months)';
+                }
+                console.log(`getDueDateStatus output: Upcoming (3+ Months)`);
+                return 'Upcoming (3+ Months)';
+            } catch (e) {
+                console.error(`getDueDateStatus error: ${e}, input: ${dueDate}`);
+                return 'Invalid';
+            }
+        }
+
+        function getPositionCategory(jobTitle, location) {
+            try {
+                if (!jobTitle) {
+                    console.log(`getPositionCategory: No job title, returning General RN`);
+                    return 'General RN';
+                }
+                const title = jobTitle.toLowerCase();
+                const loc = (location || '').toLowerCase();
+                const categories = {
+                    'child.*and.*family.*health': 'Child and Family Health',
+                    'community.*nursing': 'Community Nursing',
+                    'community.*health': 'Community Health',
+                    'palliative.*care': 'Palliative Care',
+                    'anaesthetics.*and.*recovery': 'Anaesthetics and Recovery',
+                    'case.*manager': 'Case Manager',
+                    'patient.*transport.*escort': 'Patient Transport Escort',
+                    'clinical.*research': 'Clinical Research',
+                    'clinical.*trials': 'Clinical Trials',
+                    'aged.*care.*assessor': 'Aged Care Assessor',
+                    'acute.*inpatient': 'Acute Inpatient',
+                    'hospital.*in.*the.*home': 'Hospital in the Home',
+                    'immuniser': 'Immunisation',
+                    'immunisation.*nurse': 'Immunisation',
+                    'mothers.*and.*baby': 'Maternity',
+                    'float.*pool': 'Float Pool',
+                    'casual.*pool': 'Casual Pool',
+                    'nurse.*bank': 'Nurse Bank',
+                    'correctional.*health': 'Correctional Health',
+                    'practice.*nurse': 'Practice Nurse',
+                    'targeted': 'Targeted RN',
+                    'casual\\b': 'Casual RN',
+                    '\\bemergency.*department\\b': 'Emergency',
+                    '\\bed\\b.*nurse': 'Emergency',
+                    'paediatric.*emergency': 'Paediatrics',
+                    'paediatric': 'Paediatrics',
+                    'pediatric': 'Paediatrics',
+                    'mental.*health': 'Mental Health',
+                    'psychiatric': 'Mental Health',
+                    'oncology': 'Oncology',
+                    'cancer.*care': 'Cancer Care',
+                    'operating.*theatre': 'Operating Theatre',
+                    'theatre': 'Operating Theatre',
+                    'perioperative': 'Perioperative',
+                    'anaesthetics': 'Anaesthetics',
+                    'rural': 'Rural',
+                    'ward': 'Ward',
+                    'midwifery': 'Midwifery',
+                    'icu\\b': 'Intensive Care',
+                    'intensive.*care': 'Intensive Care',
+                    'ccu\\b': 'Critical Care',
+                    'critical.*care': 'Critical Care',
+                    'coronary.*care': 'Critical Care',
+                    'surgical': 'Surgical',
+                    'general.*surgery': 'Surgical',
+                    'day.*surgery': 'Day Surgery',
+                    'medical': 'Medical',
+                    'orthopaedic': 'Orthopaedics',
+                    'neonatal': 'Neonatal',
+                    'nicu\\b': 'Neonatal',
+                    'special.*care.*nursery': 'Special Care Nursery',
+                    'cardiac': 'Cardiac Care',
+                    'dialysis': 'Dialysis',
+                    'renal': 'Renal',
+                    'endoscopy': 'Endoscopy',
+                    'maternity': 'Maternity',
+                    'clinical.*nurse.*specialist': 'Clinical Nurse Specialist',
+                    '\\bcns\\b': 'Clinical Nurse Specialist',
+                    'nurse.*practitioner': 'Nurse Practitioner',
+                    '\\bnp\\b': 'Nurse Practitioner',
+                    'haematology': 'Haematology',
+                    'haemophilia.*thalassaemia': 'Haematology',
+                    'pain.*management': 'Pain Management',
+                    'neurosciences': 'Neurosciences',
+                    'recovery': 'Recovery',
+                    'primary.*care': 'Primary Care',
+                    'care.*navigation': 'Care Navigation',
+                    'remote.*patient.*monitoring': 'Remote Patient Monitoring',
+                    'child.*and.*adolescent': 'Child and Adolescent'
+                };
+
+                // Check Job Title first
+                for (const [key, value] of Object.entries(categories)) {
+                    if (new RegExp(key, 'i').test(title)) {
+                        console.log(`getPositionCategory: Title=${jobTitle}, Matched=${key}, Category=${value}`);
+                        return value;
+                    }
+                }
+
+                // Fallback to Location for generic titles
+                if (title.includes('registered nurse') || title.includes('rn')) {
+                    for (const [key, value] of Object.entries(categories)) {
+                        if (new RegExp(key, 'i').test(loc)) {
+                            console.log(`getPositionCategory: Title=${jobTitle}, Location=${location}, Matched=${key}, Category=${value}`);
+                            return value;
+                        }
+                    }
+                    console.log(`getPositionCategory: Title=${jobTitle}, No specific match, returning General RN`);
+                    return 'General RN';
+                }
+
+                console.log(`getPositionCategory: Title=${jobTitle}, No match, returning Other`);
+                return 'Other';
+            } catch (e) {
+                console.error(`getPositionCategory error: ${e}, title: ${jobTitle}, location: ${location}`);
+                return 'Other';
+            }
+        }
+
+        function processData(data) {
+            try {
+                console.log(`Processing ${data.length} jobs`);
+                jobData = data.filter(row => {
+                    const status = getDueDateStatus(row['Due Date']);
+                    console.log(`Job: ${row['Job Title']}, Location: ${row.Location}, Due Date: ${row['Due Date']}, Status: ${status}`);
+                    return status !== 'Expired' && status !== 'Invalid';
+                });
+
+                console.log(`Active jobs after filtering: ${jobData.length}`);
+
+                const stats = {
+                    totalJobs: jobData.length,
+                    incentivizedJobs: 0,
+                    nonIncentivizedJobs: 0,
+                    locations: {},
+                    positions: {},
+                    regions: {},
+                    dueDateStatus: {
+                        'Upcoming (Within 1 Month)': { count: 0, desc: `Jobs due by ${oneMonthFromNow.toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'})}`, range: `${currentDate.toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'})} - ${oneMonthFromNow.toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'})}` },
+                        'Upcoming (1-3 Months)': { count: 0, desc: `Jobs due within 1-3 months`, range: `${new Date(oneMonthFromNow.getTime()+86400000).toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'})} - ${threeMonthsFromNow.toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'})}` },
+                        'Upcoming (3+ Months)': { count: 0, desc: `Jobs due after ${threeMonthsFromNow.toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'})}`, range: `After ${threeMonthsFromNow.toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'})}` },
+                        'Open Until Filled': { count: 0, desc: 'Jobs with no specified deadline', range: 'N/A' }
+                    }
+                };
+
+                jobData.forEach(row => {
+                    try {
+                        console.log(`Processing job: Title=${row['Job Title']}, Location=${row.Location}, Due Date=${row['Due Date']}`);
+                        const hasIncentive = hasIncentives(row.Incentives);
+                        stats.incentivizedJobs += hasIncentive ? 1 : 0;
+                        stats.nonIncentivizedJobs += hasIncentive ? 0 : 1;
+
+                        const location = cleanLocation(row.Location);
+                        stats.locations[location] = (stats.locations[location] || 0) + 1;
+
+                        const position = getPositionCategory(row['Job Title'], row.Location);
+                        stats.positions[position] = (stats.positions[position] || 0) + 1;
+
+                        const region = getRegion(row.Location);
+                        if (!stats.regions[region]) {
+                            stats.regions[region] = { incentivized: 0, nonIncentivized: 0 };
+                        }
+                        stats.regions[region].incentivized += hasIncentive ? 1 : 0;
+                        stats.regions[region].nonIncentivized += hasIncentive ? 0 : 1;
+
+                        const status = getDueDateStatus(row['Due Date']);
+                        stats.dueDateStatus[status].count += 1;
+                    } catch (e) {
+                        console.error(`Error processing job: ${JSON.stringify(row)}, error: ${e}`);
+                    }
+                });
+
+                console.log('Final stats:', JSON.stringify(stats, null, 2));
+                return stats;
+            } catch (e) {
+                console.error(`processData error: ${e}`);
+                return { totalJobs: 0, locations: {}, positions: {}, regions: {}, dueDateStatus: {} };
+            }
+        }
+
+        function populateTables(stats) {
+            try {
+                const summaryTable = document.getElementById('summaryTable');
+                const summaryData = [
+                    { metric: 'Total Active Jobs', value: stats.totalJobs },
+                    { metric: 'Incentivized Jobs', value: stats.incentivizedJobs },
+                    { metric: 'Non-Incentivized Jobs', value: stats.nonIncentivizedJobs },
+                    { metric: 'Unique Locations', value: Object.keys(stats.locations).length },
+                    { metric: 'Unique Positions', value: Object.keys(stats.positions).length },
+                    { metric: 'Unique Regions', value: Object.keys(stats.regions).length }
+                ];
+                summaryTable.innerHTML = summaryData.map(row => `
+                    <tr>
+                        <td class="p-3">${row.metric}</td>
+                        <td class="p-3">${row.value}</td>
+                    </tr>
+                `).join('');
+
+                const locationTable = document.getElementById('locationTable');
+                const locationData = Object.entries(stats.locations).map(([location, count]) => ({ location, count }));
+                locationTable.innerHTML = locationData.map(row => `
+                    <tr class="clickable-row" data-bs-toggle="modal" data-bs-target="#jobListingsModal" data-type="location" data-value="${row.location.toLowerCase()}">
+                        <td class="p-3">${row.location}</td>
+                        <td class="p-3">${row.count}</td>
+                    </tr>
+                `).join('');
+
+                const positionTable = document.getElementById('positionTable');
+                const positionData = Object.entries(stats.positions).map(([position, count]) => ({ position, count }));
+                positionTable.innerHTML = positionData.map(row => `
+                    <tr class="clickable-row" data-bs-toggle="modal" data-bs-target="#jobListingsModal" data-type="position" data-value="${row.position}">
+                        <td class="p-3">${row.position}</td>
+                        <td class="p-3">${row.count}</td>
+                    </tr>
+                `).join('');
+
+                const incentiveTable = document.getElementById('incentiveTable');
+                const incentiveData = [
+                    { status: 'Incentivized', count: stats.incentivizedJobs },
+                    { status: 'Non-Incentivized', count: stats.nonIncentivizedJobs }
+                ];
+                incentiveTable.innerHTML = incentiveData.map(row => `
+                    <tr class="clickable-row" data-bs-toggle="modal" data-bs-target="#jobListingsModal" data-type="incentive" data-value="${row.status}">
+                        <td class="p-3">${row.status}</td>
+                        <td class="p-3">${row.count}</td>
+                    </tr>
+                `).join('');
+
+                const regionTable = document.getElementById('regionTable');
+                const regionData = Object.entries(stats.regions).map(([region, counts]) => ({
+                    region,
+                    incentivized: counts.incentivized,
+                    nonIncentivized: counts.nonIncentivized
+                }));
+                regionTable.innerHTML = regionData.map(row => `
+                    <tr class="clickable-row" data-bs-toggle="modal" data-bs-target="#jobListingsModal" data-type="region" data-value="${row.region.toLowerCase()}">
+                        <td class="p-3">${row.region}</td>
+                        <td class="p-3">${row.incentivized}</td>
+                        <td class="p-3">${row.nonIncentivized}</td>
+                    </tr>
+                `).join('');
+
+                const dueDateTable = document.getElementById('dueDateTable');
+                const dueDateData = Object.entries(stats.dueDateStatus).filter(([_, info]) => info.count > 0);
+                dueDateTable.innerHTML = dueDateData.map(([status, info]) => `
+                    <tr class="clickable-row" data-bs-toggle="modal" data-bs-target="#jobListingsModal" data-type="dueDate" data-value="${status}">
+                        <td class="p-3">${status}</td>
+                        <td class="p-3">${info.count}</td>
+                        <td class="p-3">${info.desc}</td>
+                        <td class="p-3">${info.range}</td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error(`populateTables error: ${e}`);
+            }
+        }
+
+        function renderCharts(stats) {
+            try {
+                new Chart(document.getElementById('locationChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(stats.locations).sort((a, b) => stats.locations[b] - stats.locations[a]).slice(0, 10),
+                        datasets: [{
+                            label: 'Jobs by Location (Top 10)',
+                            data: Object.values(stats.locations).sort((a, b) => b - a).slice(0, 10),
+                            backgroundColor: 'rgba(13, 110, 253, 0.6)',
+                            borderColor: 'rgba(13, 110, 253, 1)',
+                            borderWidth: 1,
+                            barThickness: 30
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: { 
+                                beginAtZero: true, 
+                                title: { display: true, text: 'Job Count', font: { size: 14 } },
+                                ticks: { font: { size: 12 } }
+                            },
+                            x: { 
+                                ticks: { 
+                                    maxRotation: 45, 
+                                    minRotation: 45, 
+                                    font: { size: 12 } }
+                        }
+                    },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: { titleFont: { size: 14 }, bodyFont: { size: 12 } }
+                    },
+                    barPercentage: 0.8,
+                    categoryPercentage: 0.9
+                }
+            });
+
+            new Chart(document.getElementById('positionChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(stats.positions).sort((a, b) => stats.positions[b] - stats.positions[a]).slice(0, 10),
+                    datasets: [{
+                        label: 'Jobs by Position (Top 10)',
+                        data: Object.values(stats.positions).sort((a, b) => b - a).slice(0, 10),
+                        backgroundColor: 'rgba(40, 167, 69, 0.6)',
+                        borderColor: 'rgba(40, 167, 69, 1)',
+                        borderWidth: 1,
+                        barThickness: 30
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            title: { display: true, text: 'Job Count', font: { size: 14 } },
+                            ticks: { font: { size: 12 } }
+                        },
+                        x: { 
+                            ticks: { 
+                                maxRotation: 45, 
+                                minRotation: 45, 
+                                font: { size: 12 } }
+                        }
+                    },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: { titleFont: { size: 14 }, bodyFont: { size: 12 } }
+                    },
+                    barPercentage: 0.8,
+                    categoryPercentage: 0.9
+                }
+            });
+
+            new Chart(document.getElementById('incentiveChart'), {
+                type: 'pie',
+                data: {
+                    labels: ['Incentivized', 'Non-Incentivized'],
+                    datasets: [{
+                        label: 'Incentive Status',
+                        data: [stats.incentivizedJobs, stats.nonIncentivizedJobs],
+                        backgroundColor: ['rgba(255, 193, 7, 0.6)', 'rgba(108, 117, 125, 0.6)'],
+                        borderColor: ['rgba(255, 193, 7, 1)', 'rgba(108, 117, 125, 1)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        } catch (e) {
+            console.error(`renderCharts error: ${e}`);
+        }
+    }
+
+    function addTableSorting() {
+        try {
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                let sortOrder = 'desc';
+                btn.addEventListener('click', () => {
+                    const table = btn.closest('table');
+                    const tbody = table.querySelector('tbody');
+                    const rows = Array.from(tbody.querySelectorAll('tr'));
+                    const sortKey = btn.dataset.sort;
+                    const isNumeric = sortKey === 'count';
+                    table.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active', 'asc'));
+                    btn.classList.add('active');
+                    if (sortOrder === 'desc') {
+                        btn.classList.add('asc');
+                        sortOrder = 'asc';
+                    } else {
+                        sortOrder = 'desc';
+                    }
+
+                    rows.sort((a, b) => {
+                        let aValue = a.children[sortKey === 'location' || sortKey === 'region' || sortKey === 'position' ? 0 : 1].textContent;
+                        let bValue = b.children[sortKey === 'location' || sortKey === 'region' || sortKey === 'position' ? 0 : 1].textContent;
+                        if (isNumeric) {
+                            return sortOrder === 'desc' ? parseInt(bValue) - parseInt(aValue) : parseInt(aValue) - parseInt(bValue);
+                        }
+                        return sortOrder === 'desc' ? bValue.localeCompare(aValue) : aValue.localeCompare(bValue);
+                    });
+
+                    tbody.innerHTML = '';
+                    rows.forEach(row => tbody.appendChild(row));
+                });
+            });
+        } catch (e) {
+            console.error(`addTableSorting error: ${e}`);
+        }
+    }
+
+    function addTableSearch() {
+        try {
+            const locationSearch = document.getElementById('locationSearch');
+            const positionSearch = document.getElementById('positionSearch');
+            const regionSearch = document.getElementById('regionSearch');
+
+            function filterRows(input, tableId, dataAttr) {
+                const query = input.value.toLowerCase().trim();
+                const rows = document.querySelectorAll(`#${tableId} tr`);
+                rows.forEach(row => {
+                    const value = row.getAttribute(dataAttr).toLowerCase();
+                    row.style.display = value.includes(query) ? '' : 'none';
+                });
+            }
+
+            locationSearch.addEventListener('input', () => {
+                const collapse = document.getElementById('locationTableCollapse');
+                if (!collapse.classList.contains('show')) {
+                    collapse.classList.add('show');
+                }
+                filterRows(locationSearch, 'locationTable', 'data-value');
+            });
+
+            positionSearch.addEventListener('input', () => {
+                const collapse = document.getElementById('positionTableCollapse');
+                if (!collapse.classList.contains('show')) {
+                    collapse.classList.add('show');
+                }
+                filterRows(positionSearch, 'positionTable', 'data-value');
+            });
+
+            regionSearch.addEventListener('input', () => {
+                const collapse = document.getElementById('regionTableCollapse');
+                if (!collapse.classList.contains('show')) {
+                    collapse.classList.add('show');
+                }
+                filterRows(regionSearch, 'regionTable', 'data-value');
+            });
+        } catch (e) {
+            console.error(`addTableSearch error: ${e}`);
+        }
+    }
+
+    function addModalListeners() {
+        try {
+            document.querySelectorAll('.clickable-row').forEach(row => {
+                row.addEventListener('click', () => {
+                    const type = row.dataset.type;
+                    const value = row.dataset.value;
+                    const modalLabel = document.getElementById('jobListingsModalLabel');
+                    const jobListingsTable = document.getElementById('jobListingsTable');
+                    let filteredJobs = [];
+
+                    if (type === 'position') {
+                        modalLabel.textContent = `Job Listings for ${value}`;
+                        filteredJobs = jobData.filter(job => getPositionCategory(job['Job Title'], job.Location) === value);
+                    } else if (type === 'incentive') {
+                        modalLabel.textContent = `Job Listings for ${value} Jobs`;
+                        filteredJobs = jobData.filter(job => (value === 'Incentivized') === hasIncentives(job.Incentives));
+                    } else if (type === 'dueDate') {
+                        modalLabel.textContent = `Job Listings for ${value}`;
+                        filteredJobs = jobData.filter(job => getDueDateStatus(job['Due Date']) === value);
+                    } else if (type === 'location') {
+                        modalLabel.textContent = `Job Listings for ${value}`;
+                        filteredJobs = jobData.filter(job => cleanLocation(job.Location).toLowerCase() === value);
+                    } else if (type === 'region') {
+                        modalLabel.textContent = `Job Listings for ${value} Region`;
+                        filteredJobs = jobData.filter(job => getRegion(job.Location).toLowerCase() === value);
+                    }
+
+                    jobListingsTable.innerHTML = filteredJobs.map(job => `
+                        <tr>
+                            <td class="p-3">${job['Job Title'] || 'N/A'}</td>
+                            <td class="p-3">${cleanLocation(job.Location)}</td>
+                            <td class="p-3">${job['Due Date'] || 'Open Until Filled'}</td>
+                            <td class="p-3"><a href="${job.URL || '#'}" target="_blank" class="text-primary">View Job</a></td>
+                        </tr>
+                    `).join('');
+                });
+            });
+        } catch (e) {
+            console.error(`addModalListeners error: ${e}`);
+        }
+    }
+
+    // Load jobs.json
+    fetch('jobs.json')
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to load jobs.json');
+            return response.json();
+        })
+        .then(data => {
+            console.log('Loaded jobs.json:', data);
+            const stats = processData(data);
+            populateTables(stats);
+            renderCharts(stats);
+            addTableSorting();
+            addTableSearch();
+            addModalListeners();
+            // Set last updated from newest 'Last Seen' date in the data
+            const dates = data.map(d => d['Last Seen']).filter(Boolean).sort();
+            const lastSeen = dates.length ? dates[dates.length - 1] : null;
+            if (lastSeen) {
+                const d = new Date(lastSeen);
+                const fmt = d.toLocaleDateString('en-AU', {day:'numeric', month:'long', year:'numeric'});
+                document.getElementById('lastUpdated').innerHTML = `<strong>Last updated:</strong> ${fmt}`;
+                document.getElementById('footerDate').textContent = `Built for NSW Health RN Job Seekers | Data as of ${fmt}`;
+            }
+        })
+        .catch(err => {
+            document.getElementById('errorMessage').classList.remove('d-none');
+            document.getElementById('errorMessage').innerHTML = 'Error loading job data. Please ensure jobs.json is in the main folder.';
+            console.error('Data fetch error:', err);
+        });
+</script>
+</body>
+</html>

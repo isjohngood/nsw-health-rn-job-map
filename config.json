@@ -1,0 +1,5 @@
+{
+    "FETCH_ALL_DUE_DATES": true,
+    "REMOVE_UNLISTED_JOBS": false,
+    "ENABLE_ALERT_BEEP": true
+}

@@ -1,0 +1,81 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pkl
+
+# Scraper debug/error output
+error_job_page_*.html
+error_page_*.html
+no_jobs_page_*.html
+failed_text_*.txt
+extracted_dates_*.txt
+failed_urls.txt
+check_jobs_csv.log
+job_map_plotter.log
+
+# State caches (geocode_cache.pkl IS committed — reused by GitHub Actions)
+csv_hash.pkl
+previous_urls.pkl
+
+# Invalid/debug CSVs
+invalid_jobs.csv
+output/debug_*.csv
+output/duplicate_urls.csv
+output/failed_geocodes.txt
+
+# Timestamped map files (keep only job_map.html)
+output/job_map_2*.html
+output/job_map_incentives_only_*.html
+output/test_*.html
+output/test_*.json
+
+# Temp files from Windows
+New Text Document*.txt
+(value
+({
+0)
+1
+`
+b
+b.classList.remove('active'
+cleanLocation(job.Location).toLowerCase()
+
+# Node
+node_modules/
+package-lock.json
+
+# Misc logs and debug files
+plot_job_map.log
+test_map.log
+job_map_plotter.log
+*.log
+*.xlsx
+*.pkl
+index.txt
+job_positions.txt
+
+# Leftover junk files (Windows copy-paste accidents)
+rn_jobs_with_incentiveols.csv
+due_date_formats*.txt
+tailwind.config.js
+*.txt
+
+# Python helper scripts not part of the main workflow
+app.py
+checkcsvvalid.py
+finddue.py
+hash_password.py
+side.py
+term.py
+testinggoogle.py
+extract_jobs.py
+scrapejobs.py
+
+# Directories with temp data
+failed_due_date_pages/
+failed_pages/
+.venv-linux/
+
+job_map.html

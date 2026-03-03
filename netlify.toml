@@ -1,0 +1,19 @@
+[build]
+  publish = "."     # serve files from the root (index.html, jobs.json, output/)
+  ignore = "exit 1" # always redeploy on push (no build command needed)
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+
+[[headers]]
+  for = "/output/*"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/jobs.json"
+  [headers.values]
+    Cache-Control = "no-cache"

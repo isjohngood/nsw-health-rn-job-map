@@ -1,0 +1,80 @@
+name: Scrape NSW Health RN Jobs
+
+on:
+  # Run automatically twice a week (Mon + Thu at 8 PM AEST = 10 AM UTC)
+  schedule:
+    - cron: '0 10 * * 1,4'
+  # Allow manual trigger from the GitHub Actions UI
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to commit and push data files
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so git push works
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Google Chrome
+        run: |
+          wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo dpkg -i google-chrome-stable_current_amd64.deb
+          sudo apt-get -f install -y
+          google-chrome --version
+
+      - name: Install Xvfb (virtual display)
+        run: sudo apt-get install -y xvfb
+
+      - name: Scrape jobs (with virtual display to bypass bot detection)
+        run: |
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1920x1080x24 &
+          sleep 2
+          python scrapefaster.py --ci
+        env:
+          # Disable the beep in CI
+          PYTHONUNBUFFERED: "1"
+
+      - name: Convert CSV to JSON
+        run: python convert.py
+
+      - name: Generate interactive map
+        run: python processjobs.py
+
+      - name: Copy latest map to output/job_map.html
+        run: |
+          LATEST=$(ls -t output/job_map_2*.html 2>/dev/null | head -1)
+          if [ -n "$LATEST" ]; then
+            cp "$LATEST" output/job_map.html
+            echo "Copied $LATEST → output/job_map.html"
+          else
+            echo "No timestamped map found, output/job_map.html unchanged"
+          fi
+
+      - name: Commit and push updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add rn_jobs_with_incentives.csv jobs.json output/job_map.html
+          # Only commit if there are changes
+          if git diff --staged --quiet; then
+            echo "No changes to commit — data is up to date."
+          else
+            git commit -m "chore: update job data $(date +'%Y-%m-%d')"
+            git push
+            echo "Changes committed and pushed."
+          fi
