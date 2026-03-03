@@ -317,6 +317,7 @@
                 // Normalize date string
                 let cleanedDate = dueDate.trim().toLowerCase();
                 cleanedDate = cleanedDate.replace(/^is\s+/i, '');
+                cleanedDate = cleanedDate.replace(/^[a-z]+,\s*/i, ''); // strip "thursday, " prefix
                 cleanedDate = cleanedDate.replace(/(\d+)(st|nd|rd|th)\b/gi, '$1');
                 cleanedDate = cleanedDate.replace(/\\/g, '/');
 
@@ -633,31 +634,31 @@
                             backgroundColor: 'rgba(13, 110, 253, 0.6)',
                             borderColor: 'rgba(13, 110, 253, 1)',
                             borderWidth: 1,
-                            barThickness: 30
+                            barThickness: 30,
+                            barPercentage: 0.8,
+                            categoryPercentage: 0.9
                         }]
                     },
                     options: {
                         scales: {
-                            y: { 
-                                beginAtZero: true, 
+                            y: {
+                                beginAtZero: true,
                                 title: { display: true, text: 'Job Count', font: { size: 14 } },
                                 ticks: { font: { size: 12 } }
                             },
-                            x: { 
-                                ticks: { 
-                                    maxRotation: 45, 
-                                    minRotation: 45, 
+                            x: {
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 45,
                                     font: { size: 12 } }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { titleFont: { size: 14 }, bodyFont: { size: 12 } }
                         }
-                    },
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: { titleFont: { size: 14 }, bodyFont: { size: 12 } }
-                    },
-                    barPercentage: 0.8,
-                    categoryPercentage: 0.9
-                }
-            });
+                    }
+                });
 
             new Chart(document.getElementById('positionChart'), {
                 type: 'bar',
@@ -669,29 +670,29 @@
                         backgroundColor: 'rgba(40, 167, 69, 0.6)',
                         borderColor: 'rgba(40, 167, 69, 1)',
                         borderWidth: 1,
-                        barThickness: 30
+                        barThickness: 30,
+                        barPercentage: 0.8,
+                        categoryPercentage: 0.9
                     }]
                 },
                 options: {
                     scales: {
-                        y: { 
-                            beginAtZero: true, 
+                        y: {
+                            beginAtZero: true,
                             title: { display: true, text: 'Job Count', font: { size: 14 } },
                             ticks: { font: { size: 12 } }
                         },
-                        x: { 
-                            ticks: { 
-                                maxRotation: 45, 
-                                minRotation: 45, 
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
                                 font: { size: 12 } }
                         }
                     },
-                    plugins: { 
+                    plugins: {
                         legend: { display: false },
                         tooltip: { titleFont: { size: 14 }, bodyFont: { size: 12 } }
-                    },
-                    barPercentage: 0.8,
-                    categoryPercentage: 0.9
+                    }
                 }
             });
 
