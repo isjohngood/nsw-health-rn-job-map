@@ -19,6 +19,16 @@
         .chart-container { max-width: 800px; margin: 0 auto; }
         .clickable-row { cursor: pointer; }
         .clickable-row:hover { background-color: #f1f3f5; }
+        .filter-panel { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; }
+        .filter-panel .panel-header { cursor: pointer; user-select: none; }
+        .new-jobs-banner { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; }
+        .highlight-new { background-color: #fff9c4 !important; }
+        .tag-chip { display: inline-flex; align-items: center; background: #e9ecef;
+                    border-radius: 999px; padding: 2px 10px; font-size: 0.85em;
+                    margin: 2px; gap: 4px; }
+        .tag-chip button { background: none; border: none; padding: 0; line-height: 1;
+                           cursor: pointer; font-size: 1em; color: #666; }
+        .tag-chip button:hover { color: #dc3545; }
     </style>
 </head>
 <body class="bg-light">
@@ -74,6 +84,106 @@
             </div>
         </div>
     </div>
+
+    <!-- New-jobs alert banner (hidden by default) -->
+    <div id="newJobsBanner" class="container mt-4 d-none">
+        <div class="new-jobs-banner p-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <span id="newJobsBannerText" class="fw-semibold">&#9889; New matching jobs since your last visit</span>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-warning" onclick="scrollToNewJobs()">View</button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="dismissNewJobsBanner()">Dismiss</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Affordability Filter Panel -->
+    <section class="container mt-4">
+        <div class="filter-panel p-4">
+            <div class="panel-header d-flex justify-content-between align-items-center"
+                 data-bs-toggle="collapse" data-bs-target="#affordabilityCollapse" aria-expanded="false">
+                <h5 class="mb-0 fw-semibold">&#127968; Affordability Filter</h5>
+                <span class="text-muted small" id="affordToggleHint">&#9660; Expand</span>
+            </div>
+            <div class="collapse mt-3" id="affordabilityCollapse">
+                <div id="affordFilterBadge" class="d-none mb-3">
+                    <span class="badge bg-primary fs-6" id="affordFilterBadgeText"></span>
+                </div>
+                <div class="row g-4 align-items-end">
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold">Max median house price</label>
+                        <input type="range" class="form-range" id="budgetSlider"
+                               min="200000" max="2000000" step="25000" value="750000"
+                               oninput="updateAffordLabels()">
+                        <div class="text-center fw-bold" id="budgetLabel">$750,000</div>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold">Max commute from affordable area</label>
+                        <input type="range" class="form-range" id="commuteSlider"
+                               min="10" max="150" step="5" value="60"
+                               oninput="updateAffordLabels()">
+                        <div class="text-center fw-bold" id="commuteLabel">60 km</div>
+                    </div>
+                    <div class="col-md-2 d-flex flex-column gap-2">
+                        <button class="btn btn-primary" onclick="applyAffordabilityFilter()">Apply Filter</button>
+                        <button class="btn btn-outline-secondary" onclick="clearAffordabilityFilter()">Clear</button>
+                    </div>
+                </div>
+                <p class="text-muted small mt-2 mb-0">
+                    Jobs without coordinates are excluded when this filter is active.
+                    <a href="#" onclick="return false;" id="noCoordNote" class="d-none">
+                        (<span id="noCoordCount">0</span> jobs hidden — no location data)
+                    </a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Alert Preferences Panel -->
+    <section class="container mt-3">
+        <div class="filter-panel p-4">
+            <div class="panel-header d-flex justify-content-between align-items-center"
+                 data-bs-toggle="collapse" data-bs-target="#alertPrefsCollapse" aria-expanded="false">
+                <h5 class="mb-0 fw-semibold">&#128276; My Alerts</h5>
+                <span class="text-muted small" id="alertToggleHint">&#9660; Expand</span>
+            </div>
+            <div class="collapse mt-3" id="alertPrefsCollapse">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold" for="alertEmail">Email (for email alerts)</label>
+                        <input type="email" class="form-control" id="alertEmail" placeholder="you@example.com">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold d-block">Notify me about new jobs:</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="alertMode" id="alertModeAny" value="any" checked>
+                            <label class="form-check-label" for="alertModeAny">Anywhere in NSW</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="alertMode" id="alertModeFilter" value="filter">
+                            <label class="form-check-label" for="alertModeFilter">Within my affordability filter above</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="alertMode" id="alertModeLocations" value="locations">
+                            <label class="form-check-label" for="alertModeLocations">Specific locations:</label>
+                        </div>
+                        <div id="locationTagsContainer" class="mt-2 d-flex flex-wrap gap-1">
+                            <div id="locationTagsList"></div>
+                            <select id="locationTagSelect" class="form-select form-select-sm" style="width:auto;min-width:160px"
+                                    onchange="addLocationTag(this.value); this.value=''">
+                                <option value="">+ Add location</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary" onclick="saveAlertPrefs()">Save Preferences</button>
+                </div>
+                <div id="alertSaveToast" class="d-none mt-2 alert alert-success py-2">
+                    Preferences saved!
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Stats Section -->
     <section class="container py-5">
@@ -267,6 +377,252 @@
         const threeMonthsFromNow = new Date(currentDate);
         threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
         let jobData = [];
+        let allJobData = [];          // unfiltered master copy
+        let suburbPricesData = null;  // lazy-loaded suburb_prices.json
+        let activeAffordFilter = null; // {budget, commute_km} or null
+        let alertLocationTags = [];   // selected location tags for alerts
+        let newJobsForBanner = [];    // jobs detected as new this session
+
+        // ---------------------------------------------------------------
+        // Haversine distance (km) between two lat/lon pairs
+        // ---------------------------------------------------------------
+        function haversine(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const toRad = x => x * Math.PI / 180;
+            const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+            const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+            return 2 * R * Math.asin(Math.sqrt(a));
+        }
+
+        // ---------------------------------------------------------------
+        // Affordability filter helpers
+        // ---------------------------------------------------------------
+        function updateAffordLabels() {
+            const budget = parseInt(document.getElementById('budgetSlider').value);
+            const commute = parseInt(document.getElementById('commuteSlider').value);
+            document.getElementById('budgetLabel').textContent = '$' + budget.toLocaleString();
+            document.getElementById('commuteLabel').textContent = commute + ' km';
+        }
+
+        async function loadSuburbPrices() {
+            if (suburbPricesData) return suburbPricesData;
+            try {
+                const resp = await fetch('suburb_prices.json');
+                if (!resp.ok) throw new Error('suburb_prices.json not found');
+                suburbPricesData = await resp.json();
+                return suburbPricesData;
+            } catch (e) {
+                console.error('Failed to load suburb_prices.json:', e);
+                return [];
+            }
+        }
+
+        function jobPassesAffordFilter(job, affordableSuburbs, commute_km) {
+            if (job.lat == null || job.lon == null) return false;
+            const latDeg = commute_km / 111;
+            const lonDeg = commute_km / (111 * Math.cos(job.lat * Math.PI / 180));
+            for (const sub of affordableSuburbs) {
+                if (Math.abs(sub.lat - job.lat) > latDeg) continue;
+                if (Math.abs(sub.lon - job.lon) > lonDeg) continue;
+                if (haversine(job.lat, job.lon, sub.lat, sub.lon) <= commute_km) return true;
+            }
+            return false;
+        }
+
+        async function applyAffordabilityFilter() {
+            const budget = parseInt(document.getElementById('budgetSlider').value);
+            const commute_km = parseInt(document.getElementById('commuteSlider').value);
+            const suburbs = await loadSuburbPrices();
+            if (!suburbs.length) {
+                alert('Could not load suburb price data (suburb_prices.json missing).');
+                return;
+            }
+            const affordable = suburbs.filter(s => s.median_price <= budget);
+            activeAffordFilter = { budget, commute_km, affordable };
+
+            const noCoord = allJobData.filter(j => j.lat == null || j.lon == null).length;
+            jobData = allJobData.filter(j => jobPassesAffordFilter(j, affordable, commute_km));
+
+            const badge = document.getElementById('affordFilterBadge');
+            badge.classList.remove('d-none');
+            document.getElementById('affordFilterBadgeText').textContent =
+                `Showing ${jobData.length} jobs within ${commute_km}km of affordable areas (≤$${budget.toLocaleString()})`;
+
+            const noteEl = document.getElementById('noCoordNote');
+            if (noCoord > 0) {
+                noteEl.classList.remove('d-none');
+                document.getElementById('noCoordCount').textContent = noCoord;
+            }
+
+            // Re-render
+            const stats = processData(jobData);
+            reRender(stats);
+        }
+
+        function clearAffordabilityFilter() {
+            activeAffordFilter = null;
+            jobData = [...allJobData];
+            document.getElementById('affordFilterBadge').classList.add('d-none');
+            document.getElementById('noCoordNote').classList.add('d-none');
+            const stats = processData(jobData);
+            reRender(stats);
+        }
+
+        function reRender(stats) {
+            populateTables(stats);
+            // Destroy existing charts before re-rendering
+            ['locationChart','positionChart','incentiveChart'].forEach(id => {
+                const existing = Chart.getChart(id);
+                if (existing) existing.destroy();
+            });
+            renderCharts(stats);
+            addTableSorting();
+            addTableSearch();
+            addModalListeners();
+        }
+
+        // Collapse toggle hints
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('affordabilityCollapse').addEventListener('show.bs.collapse', () => {
+                document.getElementById('affordToggleHint').textContent = '\u25b2 Collapse';
+            });
+            document.getElementById('affordabilityCollapse').addEventListener('hide.bs.collapse', () => {
+                document.getElementById('affordToggleHint').textContent = '\u25bc Expand';
+            });
+            document.getElementById('alertPrefsCollapse').addEventListener('show.bs.collapse', () => {
+                document.getElementById('alertToggleHint').textContent = '\u25b2 Collapse';
+            });
+            document.getElementById('alertPrefsCollapse').addEventListener('hide.bs.collapse', () => {
+                document.getElementById('alertToggleHint').textContent = '\u25bc Expand';
+            });
+        });
+
+        // ---------------------------------------------------------------
+        // Alert Preferences
+        // ---------------------------------------------------------------
+        function loadAlertPrefs() {
+            try {
+                const raw = localStorage.getItem('rnJobAlertPrefs');
+                return raw ? JSON.parse(raw) : null;
+            } catch { return null; }
+        }
+
+        function saveAlertPrefs() {
+            const email = document.getElementById('alertEmail').value.trim();
+            const mode = document.querySelector('input[name="alertMode"]:checked').value;
+            const prefs = {
+                email,
+                mode,
+                locations: [...alertLocationTags],
+                budget: parseInt(document.getElementById('budgetSlider').value),
+                commute_km: parseInt(document.getElementById('commuteSlider').value)
+            };
+            localStorage.setItem('rnJobAlertPrefs', JSON.stringify(prefs));
+            const toast = document.getElementById('alertSaveToast');
+            toast.classList.remove('d-none');
+            setTimeout(() => toast.classList.add('d-none'), 3000);
+        }
+
+        function populateAlertPrefsUI(prefs) {
+            if (!prefs) return;
+            if (prefs.email) document.getElementById('alertEmail').value = prefs.email;
+            const modeEl = document.querySelector(`input[name="alertMode"][value="${prefs.mode}"]`);
+            if (modeEl) modeEl.checked = true;
+            alertLocationTags = prefs.locations || [];
+            renderLocationTags();
+        }
+
+        function addLocationTag(val) {
+            if (!val || alertLocationTags.includes(val)) return;
+            alertLocationTags.push(val);
+            renderLocationTags();
+        }
+
+        function removeLocationTag(val) {
+            alertLocationTags = alertLocationTags.filter(t => t !== val);
+            renderLocationTags();
+        }
+
+        function renderLocationTags() {
+            const list = document.getElementById('locationTagsList');
+            list.innerHTML = alertLocationTags.map(t =>
+                `<span class="tag-chip">${t}<button type="button" onclick="removeLocationTag('${t.replace(/'/g,"\\'")}')">&#x2715;</button></span>`
+            ).join('');
+        }
+
+        function populateLocationTagSelect(locations) {
+            const sel = document.getElementById('locationTagSelect');
+            const existing = new Set(Array.from(sel.options).map(o => o.value));
+            locations.sort().forEach(loc => {
+                if (!existing.has(loc) && loc) {
+                    const opt = document.createElement('option');
+                    opt.value = loc;
+                    opt.textContent = loc;
+                    sel.appendChild(opt);
+                }
+            });
+        }
+
+        // ---------------------------------------------------------------
+        // Browser alert detection (new jobs since last visit)
+        // ---------------------------------------------------------------
+        function runBrowserAlertDetection(jobs) {
+            try {
+                const prefs = loadAlertPrefs();
+                const lastSeenRaw = localStorage.getItem('rnLastSeenUrls');
+                const lastSeenUrls = lastSeenRaw ? new Set(JSON.parse(lastSeenRaw)) : new Set();
+
+                const newJobs = jobs.filter(j => j.URL && !lastSeenUrls.has(j.URL));
+
+                // Update last-seen immediately
+                const currentUrls = jobs.map(j => j.URL).filter(Boolean);
+                localStorage.setItem('rnLastSeenUrls', JSON.stringify(currentUrls));
+
+                if (!newJobs.length) return;
+
+                // Apply alert criteria
+                let matching = newJobs;
+                if (prefs) {
+                    if (prefs.mode === 'locations' && prefs.locations && prefs.locations.length) {
+                        matching = newJobs.filter(j => {
+                            const loc = cleanLocation(j.Location).toLowerCase();
+                            return prefs.locations.some(l => loc.includes(l.toLowerCase()));
+                        });
+                    } else if (prefs.mode === 'filter' && activeAffordFilter) {
+                        matching = newJobs.filter(j =>
+                            jobPassesAffordFilter(j, activeAffordFilter.affordable, activeAffordFilter.commute_km)
+                        );
+                    }
+                    // mode === 'any' keeps all newJobs
+                }
+
+                if (!matching.length) return;
+                newJobsForBanner = matching;
+
+                const banner = document.getElementById('newJobsBanner');
+                banner.classList.remove('d-none');
+                document.getElementById('newJobsBannerText').textContent =
+                    `\u26a1 ${matching.length} new matching job${matching.length > 1 ? 's' : ''} since your last visit`;
+            } catch (e) {
+                console.error('Alert detection error:', e);
+            }
+        }
+
+        function scrollToNewJobs() {
+            // Highlight new jobs in the tables
+            if (!newJobsForBanner.length) return;
+            const newUrls = new Set(newJobsForBanner.map(j => j.URL));
+            document.querySelectorAll('.clickable-row').forEach(row => {
+                // rows don't have URLs directly; highlight all in top of location table
+            });
+            // Scroll to stats section
+            document.querySelector('section.container.py-5').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('newJobsBanner').classList.add('d-none');
+        }
+
+        function dismissNewJobsBanner() {
+            document.getElementById('newJobsBanner').classList.add('d-none');
+        }
 
         function cleanLocation(location) {
             try {
@@ -847,12 +1203,20 @@
         })
         .then(data => {
             console.log('Loaded jobs.json:', data);
+            allJobData = data;
             const stats = processData(data);
             populateTables(stats);
             renderCharts(stats);
             addTableSorting();
             addTableSearch();
             addModalListeners();
+            // Populate location tag select with unique locations
+            const uniqueLocs = [...new Set(data.map(j => cleanLocation(j.Location)).filter(Boolean))];
+            populateLocationTagSelect(uniqueLocs);
+            // Restore saved alert prefs
+            populateAlertPrefsUI(loadAlertPrefs());
+            // Browser alert detection
+            runBrowserAlertDetection(jobData);
             // Set last updated from newest 'Last Seen' date in the data
             const dates = data.map(d => d['Last Seen']).filter(Boolean).sort();
             const lastSeen = dates.length ? dates[dates.length - 1] : null;

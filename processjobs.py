@@ -397,6 +397,27 @@ def main():
         job_map.save(output_file)
         logger.info(f"Map saved as {output_file}")
         
+        # Inject lat/lon into jobs.json
+        jobs_json_path = "jobs.json"
+        if os.path.exists(jobs_json_path):
+            import json
+            with open(jobs_json_path, "r", encoding="utf-8") as f:
+                jobs = json.load(f)
+            for job in jobs:
+                raw_loc = job.get("Location", "")
+                # Use a dummy row/idx for clean_location signature
+                class _DummyRow:
+                    def to_dict(self): return {}
+                cleaned = clean_location(raw_loc, 0, _DummyRow())
+                coords = geo_cache.get(cleaned) if cleaned else None
+                job["lat"] = coords[0] if coords else None
+                job["lon"] = coords[1] if coords else None
+            with open(jobs_json_path, "w", encoding="utf-8") as f:
+                json.dump(jobs, f, ensure_ascii=False)
+            logger.info(f"Wrote lat/lon to {len(jobs)} jobs in {jobs_json_path}")
+        else:
+            logger.warning(f"{jobs_json_path} not found — skipping lat/lon export")
+
         # Update state
         save_cache({"hash": current_hash}, CSV_HASH)
         save_cache({"urls": set(df['URL'])}, PREVIOUS_URLS)

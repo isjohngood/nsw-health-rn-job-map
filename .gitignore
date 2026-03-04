@@ -64,6 +64,8 @@ tailwind.config.js
 !requirements.txt
 
 # Python helper scripts not part of the main workflow
+build_suburb_prices.py
+suburb_geo_cache.json
 app.py
 checkcsvvalid.py
 finddue.py

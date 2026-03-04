@@ -59,6 +59,15 @@ jobs:
             echo "No timestamped map found, output/job_map.html unchanged"
           fi
 
+      - name: Send email alerts for new jobs
+        if: env.RESEND_API_KEY != ''
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+          ALERT_LOCATIONS: ${{ secrets.ALERT_LOCATIONS }}
+          ALERT_INCENTIVES_ONLY: ${{ secrets.ALERT_INCENTIVES_ONLY }}
+        run: python send_alerts.py
+
       - name: Commit and push updated data
         run: |
           git config user.name "github-actions[bot]"
