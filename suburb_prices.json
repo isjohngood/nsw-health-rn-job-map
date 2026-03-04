@@ -1,7 +1,7 @@
 [
   {
     "suburb": "BROKEN HILL",
-    "median_price": 225000,
+    "median_price": 215000,
     "lat": -31.95,
     "lon": 141.47
   },
@@ -19,13 +19,13 @@
   },
   {
     "suburb": "COBAR",
-    "median_price": 250000,
+    "median_price": 265000,
     "lat": -31.5,
     "lon": 145.84
   },
   {
     "suburb": "LIGHTNING RIDGE",
-    "median_price": 180000,
+    "median_price": 140000,
     "lat": -29.43,
     "lon": 147.98
   },
@@ -37,43 +37,43 @@
   },
   {
     "suburb": "MOREE",
-    "median_price": 310000,
+    "median_price": 320000,
     "lat": -29.47,
     "lon": 149.84
   },
   {
     "suburb": "NARRABRI",
-    "median_price": 340000,
+    "median_price": 455000,
     "lat": -30.33,
     "lon": 149.78
   },
   {
     "suburb": "INVERELL",
-    "median_price": 400000,
+    "median_price": 405000,
     "lat": -29.77,
     "lon": 151.11
   },
   {
     "suburb": "GLEN INNES",
-    "median_price": 380000,
+    "median_price": 415000,
     "lat": -29.73,
     "lon": 151.73
   },
   {
     "suburb": "TENTERFIELD",
-    "median_price": 350000,
+    "median_price": 470000,
     "lat": -29.05,
     "lon": 152.02
   },
   {
     "suburb": "COONABARABRAN",
-    "median_price": 320000,
+    "median_price": 285000,
     "lat": -31.27,
     "lon": 149.28
   },
   {
     "suburb": "COONAMBLE",
-    "median_price": 250000,
+    "median_price": 220000,
     "lat": -30.95,
     "lon": 148.38
   },
@@ -91,49 +91,49 @@
   },
   {
     "suburb": "ARMIDALE",
-    "median_price": 545000,
+    "median_price": 575000,
     "lat": -30.51,
     "lon": 151.67
   },
   {
     "suburb": "GUNNEDAH",
-    "median_price": 420000,
+    "median_price": 500000,
     "lat": -30.98,
     "lon": 150.25
   },
   {
     "suburb": "QUIRINDI",
-    "median_price": 370000,
+    "median_price": 390000,
     "lat": -31.51,
     "lon": 150.68
   },
   {
     "suburb": "WALCHA",
-    "median_price": 340000,
+    "median_price": 430000,
     "lat": -30.99,
     "lon": 151.6
   },
   {
     "suburb": "URALLA",
-    "median_price": 390000,
+    "median_price": 470000,
     "lat": -30.64,
     "lon": 151.5
   },
   {
     "suburb": "DUBBO",
-    "median_price": 510000,
+    "median_price": 600000,
     "lat": -32.25,
     "lon": 148.6
   },
   {
     "suburb": "ORANGE",
-    "median_price": 650000,
+    "median_price": 700000,
     "lat": -33.28,
     "lon": 149.1
   },
   {
     "suburb": "BATHURST",
-    "median_price": 640000,
+    "median_price": 660000,
     "lat": -33.42,
     "lon": 149.58
   },
@@ -145,31 +145,31 @@
   },
   {
     "suburb": "MUDGEE",
-    "median_price": 580000,
+    "median_price": 710000,
     "lat": -32.61,
     "lon": 149.59
   },
   {
     "suburb": "COWRA",
-    "median_price": 420000,
+    "median_price": 455000,
     "lat": -33.83,
     "lon": 148.68
   },
   {
     "suburb": "YOUNG",
-    "median_price": 430000,
+    "median_price": 495000,
     "lat": -34.31,
     "lon": 148.3
   },
   {
     "suburb": "PARKES",
-    "median_price": 410000,
+    "median_price": 455000,
     "lat": -33.13,
     "lon": 148.17
   },
   {
     "suburb": "FORBES",
-    "median_price": 370000,
+    "median_price": 430000,
     "lat": -33.39,
     "lon": 147.97
   },
@@ -187,7 +187,7 @@
   },
   {
     "suburb": "WAGGA WAGGA",
-    "median_price": 545000,
+    "median_price": 640000,
     "lat": -35.12,
     "lon": 147.37
   },
@@ -199,7 +199,7 @@
   },
   {
     "suburb": "LEETON",
-    "median_price": 380000,
+    "median_price": 430000,
     "lat": -34.56,
     "lon": 146.4
   },
@@ -211,7 +211,7 @@
   },
   {
     "suburb": "HAY",
-    "median_price": 250000,
+    "median_price": 280000,
     "lat": -34.51,
     "lon": 144.84
   },
@@ -223,7 +223,7 @@
   },
   {
     "suburb": "LAKE CARGELLIGO",
-    "median_price": 210000,
+    "median_price": 250000,
     "lat": -33.3,
     "lon": 146.38
   },
@@ -241,163 +241,163 @@
   },
   {
     "suburb": "ALBURY",
-    "median_price": 680000,
+    "median_price": 600000,
     "lat": -36.08,
     "lon": 146.92
   },
   {
     "suburb": "COROWA",
-    "median_price": 430000,
+    "median_price": 450000,
     "lat": -35.99,
     "lon": 146.39
   },
   {
     "suburb": "TOCUMWAL",
-    "median_price": 420000,
+    "median_price": 470000,
     "lat": -35.81,
     "lon": 145.57
   },
   {
     "suburb": "TUMUT",
-    "median_price": 470000,
+    "median_price": 540000,
     "lat": -35.3,
     "lon": 148.22
   },
   {
     "suburb": "GUNDAGAI",
-    "median_price": 420000,
+    "median_price": 475000,
     "lat": -35.07,
     "lon": 148.1
   },
   {
     "suburb": "COOTAMUNDRA",
-    "median_price": 420000,
+    "median_price": 425000,
     "lat": -34.64,
     "lon": 148.03
   },
   {
     "suburb": "TEMORA",
-    "median_price": 400000,
+    "median_price": 440000,
     "lat": -34.45,
     "lon": 147.53
   },
   {
     "suburb": "HARDEN",
-    "median_price": 360000,
+    "median_price": 380000,
     "lat": -34.55,
     "lon": 148.38
   },
   {
     "suburb": "COOMA",
-    "median_price": 520000,
+    "median_price": 555000,
     "lat": -36.24,
     "lon": 149.12
   },
   {
     "suburb": "BOMBALA",
-    "median_price": 370000,
+    "median_price": 385000,
     "lat": -36.91,
     "lon": 149.24
   },
   {
     "suburb": "JINDABYNE",
-    "median_price": 850000,
+    "median_price": 1260000,
     "lat": -36.41,
     "lon": 148.61
   },
   {
     "suburb": "QUEANBEYAN",
-    "median_price": 790000,
+    "median_price": 890000,
     "lat": -35.35,
     "lon": 149.23
   },
   {
     "suburb": "YASS",
-    "median_price": 630000,
+    "median_price": 720000,
     "lat": -34.84,
     "lon": 148.91
   },
   {
     "suburb": "GOULBURN",
-    "median_price": 560000,
+    "median_price": 700000,
     "lat": -34.75,
     "lon": 149.72
   },
   {
     "suburb": "MOSS VALE",
-    "median_price": 900000,
+    "median_price": 1010000,
     "lat": -34.55,
     "lon": 150.38
   },
   {
     "suburb": "BOWRAL",
-    "median_price": 1150000,
+    "median_price": 1500000,
     "lat": -34.48,
     "lon": 150.42
   },
   {
     "suburb": "MITTAGONG",
-    "median_price": 930000,
+    "median_price": 1025000,
     "lat": -34.45,
     "lon": 150.44
   },
   {
     "suburb": "ROBERTSON",
-    "median_price": 870000,
+    "median_price": 950000,
     "lat": -34.57,
     "lon": 150.59
   },
   {
     "suburb": "NOWRA",
-    "median_price": 740000,
+    "median_price": 685000,
     "lat": -34.88,
     "lon": 150.6
   },
   {
     "suburb": "ULLADULLA",
-    "median_price": 780000,
+    "median_price": 865000,
     "lat": -35.36,
     "lon": 150.48
   },
   {
     "suburb": "BATEMANS BAY",
-    "median_price": 760000,
+    "median_price": 750000,
     "lat": -35.71,
     "lon": 150.18
   },
   {
     "suburb": "MERIMBULA",
-    "median_price": 800000,
+    "median_price": 890000,
     "lat": -36.89,
     "lon": 149.91
   },
   {
     "suburb": "BEGA",
-    "median_price": 650000,
+    "median_price": 625000,
     "lat": -36.68,
     "lon": 149.84
   },
   {
     "suburb": "EDEN",
-    "median_price": 590000,
+    "median_price": 725000,
     "lat": -37.07,
     "lon": 149.9
   },
   {
     "suburb": "KIAMA",
-    "median_price": 1250000,
+    "median_price": 1500000,
     "lat": -34.67,
     "lon": 150.85
   },
   {
     "suburb": "WOLLONGONG",
-    "median_price": 980000,
+    "median_price": 1280000,
     "lat": -34.42,
     "lon": 150.89
   },
   {
     "suburb": "SHELLHARBOUR",
-    "median_price": 880000,
+    "median_price": 1310000,
     "lat": -34.58,
     "lon": 150.87
   },
@@ -421,7 +421,7 @@
   },
   {
     "suburb": "NEWCASTLE",
-    "median_price": 850000,
+    "median_price": 860000,
     "lat": -32.93,
     "lon": 151.78
   },
@@ -433,25 +433,25 @@
   },
   {
     "suburb": "CESSNOCK",
-    "median_price": 620000,
+    "median_price": 648000,
     "lat": -32.83,
     "lon": 151.36
   },
   {
     "suburb": "SINGLETON",
-    "median_price": 590000,
+    "median_price": 640000,
     "lat": -32.57,
     "lon": 151.17
   },
   {
     "suburb": "MUSWELLBROOK",
-    "median_price": 510000,
+    "median_price": 535000,
     "lat": -32.27,
     "lon": 150.89
   },
   {
     "suburb": "SCONE",
-    "median_price": 490000,
+    "median_price": 625000,
     "lat": -32.07,
     "lon": 150.87
   },
@@ -469,31 +469,31 @@
   },
   {
     "suburb": "PORT MACQUARIE",
-    "median_price": 800000,
+    "median_price": 870000,
     "lat": -31.43,
     "lon": 152.91
   },
   {
     "suburb": "TAREE",
-    "median_price": 570000,
+    "median_price": 525000,
     "lat": -31.91,
     "lon": 152.46
   },
   {
     "suburb": "FORSTER",
-    "median_price": 720000,
+    "median_price": 865000,
     "lat": -32.18,
     "lon": 152.51
   },
   {
     "suburb": "KEMPSEY",
-    "median_price": 490000,
+    "median_price": 445000,
     "lat": -31.08,
     "lon": 152.84
   },
   {
     "suburb": "NAMBUCCA HEADS",
-    "median_price": 620000,
+    "median_price": 678000,
     "lat": -30.64,
     "lon": 152.97
   },
@@ -517,7 +517,7 @@
   },
   {
     "suburb": "COFFS HARBOUR",
-    "median_price": 760000,
+    "median_price": 830000,
     "lat": -30.3,
     "lon": 153.12
   },
@@ -529,7 +529,7 @@
   },
   {
     "suburb": "CASINO",
-    "median_price": 480000,
+    "median_price": 475000,
     "lat": -28.87,
     "lon": 153.05
   },
@@ -547,13 +547,13 @@
   },
   {
     "suburb": "BALLINA",
-    "median_price": 860000,
+    "median_price": 890000,
     "lat": -28.87,
     "lon": 153.56
   },
   {
     "suburb": "BYRON BAY",
-    "median_price": 2000000,
+    "median_price": 2300000,
     "lat": -28.65,
     "lon": 153.62
   },
